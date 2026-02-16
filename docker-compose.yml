@@ -89,6 +89,15 @@ services:
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/scrape-all || true
             echo "[CRON] Daily scrape triggered"
             sleep 120
+            # Generate image search context for articles without images
+            echo "[CRON] $$(date) - Generating image titles..."
+            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/image-title || true
+            sleep 60
+            # Search Google for high-quality images
+            echo "[CRON] $$(date) - Searching for better images..."
+            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/better-images || true
+            echo "[CRON] Image generation complete"
+            sleep 120
           fi
           # Weekly content generation on Sunday at 06:00
           if [ "$$DAY" = "7" ] && [ "$$HOUR" = "06" ] && [ "$$MINUTE" = "00" ]; then

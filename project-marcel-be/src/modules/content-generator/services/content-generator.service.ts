@@ -21,7 +21,7 @@ export class ContentGeneratorService {
 
   async generateArticleRequest(originalArticle) {
     const API_KEY = this.config.get('chatGPT');
-    const prompt = `Summarize this article and generate a different version: "${originalArticle}"`;
+    const prompt = `Fasse diesen Artikel auf Deutsch zusammen und erstelle eine neue Version. Antworte ausschliesslich auf Deutsch: "${originalArticle}"`;
     try {
       const response: any = await axios.post(
         'https://api.openai.com/v1/chat/completions',
@@ -43,7 +43,7 @@ export class ContentGeneratorService {
   }
   async generateArticle(originalArticle) {
     const API_KEY = this.config.get('chatGPT');
-    const prompt = `Summarize this article and generate a different version: "${originalArticle}"`;
+    const prompt = `Fasse diesen Artikel auf Deutsch zusammen und erstelle eine neue Version. Antworte ausschliesslich auf Deutsch: "${originalArticle}"`;
 
     const openai = new OpenAI({
       apiKey: API_KEY,
@@ -60,7 +60,7 @@ export class ContentGeneratorService {
 
   async createArticleContent(originalArticle) {
     const API_KEY = this.config.get('chatGPT');
-    const prompt = `Generate new content from this article after cleaning and removing unnecessary text and the result is html inner body only : "${originalArticle}"`;
+    const prompt = `Erstelle auf Deutsch neuen Inhalt aus diesem Artikel. Bereinige und entferne unnötigen Text. Das Ergebnis soll nur HTML-Inner-Body sein. Antworte ausschliesslich auf Deutsch: "${originalArticle}"`;
 
     const openai = new OpenAI({
       apiKey: API_KEY,
@@ -77,7 +77,7 @@ export class ContentGeneratorService {
 
   async createArticleTeaser(originalArticle) {
     const API_KEY = this.config.get('chatGPT');
-    const prompt = `Summarize this article after cleaning and removing unnecessary text in 2 to 3 lines max : "${originalArticle}"`;
+    const prompt = `Fasse diesen Artikel auf Deutsch zusammen, bereinige und entferne unnötigen Text. Maximal 2 bis 3 Zeilen. Antworte ausschliesslich auf Deutsch: "${originalArticle}"`;
 
     const openai = new OpenAI({
       apiKey: API_KEY,
@@ -121,11 +121,11 @@ export class ContentGeneratorService {
       messages: [
         {
           role: 'system',
-          content: 'You are an AI that summarizes YouTube videos in HTML format.',
+          content: 'Du bist eine KI, die YouTube-Videos auf Deutsch in HTML-Format zusammenfasst. Antworte immer auf Deutsch.',
         },
         {
           role: 'user',
-          content: `Summarize the video at ${youtubeVideoLink} in 3-4 paragraphs, providing a title. The output should be valid HTML inside the <body> tag.`,
+          content: `Fasse das Video unter ${youtubeVideoLink} in 3-4 Absätzen auf Deutsch zusammen und gib einen Titel an. Das Ergebnis soll gültiges HTML innerhalb des <body>-Tags sein. Antworte ausschliesslich auf Deutsch.`,
         },
       ],
     });

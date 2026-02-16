@@ -592,6 +592,15 @@ export class ScraperService {
       console.error('[SCRAPER] ✗ Date formatting failed:', error.message);
     }
 
+    // Download and enhance original images
+    try {
+      console.log('[SCRAPER] Downloading and enhancing images...');
+      await this.articlesService.downloadImages();
+      console.log('[SCRAPER] ✓ Images downloaded and enhanced');
+    } catch (error) {
+      console.error('[SCRAPER] ✗ Image download failed:', error.message);
+    }
+
     return { message: 'Scrape completed', results };
   }
 }
