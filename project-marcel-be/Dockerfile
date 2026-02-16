@@ -23,7 +23,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (need dev deps for build)
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
@@ -32,7 +32,7 @@ COPY . .
 RUN npm run build
 
 # Remove dev dependencies after build
-RUN npm prune --production
+RUN npm prune --production --legacy-peer-deps
 
 # Expose port
 EXPOSE 5000

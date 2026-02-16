@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 
 # Build args for Next.js public env vars (baked at build time)
 ARG NEXT_PUBLIC_SERVER_URL

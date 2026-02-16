@@ -38,7 +38,7 @@ if (-not $env:HCLOUD_TOKEN) {
 $SshKeyPath = "$env:USERPROFILE\.ssh\marcel_hetzner"
 if (-not (Test-Path $SshKeyPath)) {
     Write-Host "Generating SSH key..." -ForegroundColor Yellow
-    ssh-keygen -t ed25519 -f $SshKeyPath -N '""' -C "marcel-deploy"
+    ssh-keygen -t ed25519 -f $SshKeyPath -N "" -C "marcel-deploy"
 }
 
 # Upload SSH key to Hetzner
