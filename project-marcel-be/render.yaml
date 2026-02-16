@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: project-marcel-be
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: APP_NAME
+        value: BE_CORE
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: LINKEDIN_EMAIL
+        sync: false
+      - key: LINKEDIN_PASSWORD
+        sync: false
+      - key: CHATGPT_API_KEY
+        sync: false
+      - key: MONGO_URI
+        sync: false

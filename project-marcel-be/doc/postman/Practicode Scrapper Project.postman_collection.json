@@ -1,0 +1,391 @@
+{
+	"info": {
+		"_postman_id": "3b22cd5d-508a-49c6-b39a-7dd771676420",
+		"name": "Practicode Scrapper Project",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25484531"
+	},
+	"item": [
+		{
+			"name": "Youtube Chanel",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/UnlikePluto",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"UnlikePluto"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Youtube Chanel With Filter",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/ImpleniaTube/rail",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"ImpleniaTube",
+						"rail"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LinkedIn Company Posts",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/linkedin/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"linkedin",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Script Tester",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/test",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"test"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Content",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/content-generator/content",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"content-generator",
+						"content"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Image Title",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/content-generator/better-images",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"content-generator",
+						"better-images"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Teaser",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/content-generator/teaser",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"content-generator",
+						"teaser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Video Summary",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/content-generator/video",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"content-generator",
+						"video"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Articles With Pagination",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles?page=1&limit=10",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Videos With Pagination",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles/videos?page=2&limit=10",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles",
+						"videos"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "2"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Article",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles/67cec2b76abcbd6b5c651a68",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles",
+						"67cec2b76abcbd6b5c651a68"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Article By Date",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles/date",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles",
+						"date"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Articles",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles/search?query=online",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "online"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Search Articles Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/articles/search?query=online",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"articles",
+						"search"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "online"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Download Images Locally",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/download",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"download"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Download Images Locally Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/download",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"download"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Formate Dates",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/scraper/formateDates",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"scraper",
+						"formateDates"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
