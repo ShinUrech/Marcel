@@ -570,6 +570,18 @@ export class ScraperService {
       { name: 'RhB News', fn: () => this.getAllRhbNewsArticles() },
       { name: 'SOB', fn: () => this.getAllSobArticles() },
       { name: 'Citrap', fn: () => this.getAllCitrapArticles() },
+      // YouTube rail channels
+      { name: 'YouTube: SBB CFF FFS', fn: () => this.getAllVideos('SBBCFFFFS') },
+      { name: 'YouTube: BLS', fn: () => this.getAllVideos('blsag') },
+      { name: 'YouTube: Rhätische Bahn', fn: () => this.getAllVideos('raborig') },
+      { name: 'YouTube: Zentralbahn', fn: () => this.getAllVideos('zaborig') },
+      { name: 'YouTube: SOB', fn: () => this.getAllVideos('SuedostbahnSOB') },
+      { name: 'YouTube: Stadler Rail', fn: () => this.getAllVideos('StadlerRail') },
+      { name: 'YouTube: Siemens Mobility', fn: () => this.getAllVideos('SiemensMobility') },
+      { name: 'YouTube: Alstom', fn: () => this.getAllVideos('AlstomOfficial') },
+      // LinkedIn rail companies
+      { name: 'LinkedIn: SBB', fn: () => this.getAllLinkedInArticles('sbb-cff-ffs') },
+      { name: 'LinkedIn: BLS', fn: () => this.getAllLinkedInArticles('bls-ag') },
     ];
 
     for (const source of sources) {
