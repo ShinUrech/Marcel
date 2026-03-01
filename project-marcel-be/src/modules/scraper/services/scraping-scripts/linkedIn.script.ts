@@ -40,83 +40,82 @@ export async function getAllLinkedInArticles(
   const userDataDir = path.resolve(process.cwd(), 'puppeteer_data', 'linkedin');
   console.log(`[LinkedIn] Using persistent userDataDir: ${userDataDir}`);
 
-  // Also support the old cookie logic just in case it is set
-  const liAtCookie = process.env.LINKEDIN_LI_AT;
-  const cookieOptions = liAtCookie ? [{ name: 'li_at', value: liAtCookie, domain: '.linkedin.com' }] : [];
-
-  const { browser, page } = await getPuppeteerInstance(cookieOptions, { userDataDir });
+  const { browser, page } = await getPuppeteerInstance([], { userDataDir });
 
   try {
-    // STRATEGY CHANGE: Check if we are already logged in first
-    const loginUrl = 'https://www.linkedin.com/login';
-    console.log(`[LinkedIn] Step 1/6: Checking session status...`);
+    // ── STEP 1: Inject li_at cookie (if provided) on the LinkedIn domain ──────
+    // Cookies can only be reliably set after a navigation to the target domain.
+    const liAtCookie = (process.env.LINKEDIN_LI_AT || '').trim();
+    if (liAtCookie) {
+      console.log(`[LinkedIn] Step 1/6: Injecting li_at cookie on LinkedIn domain...`);
+      // Navigate to the root to establish the domain context
+      await page.goto('https://www.linkedin.com', { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.setCookie({
+        name: 'li_at',
+        value: liAtCookie,
+        domain: '.linkedin.com',
+        path: '/',
+        httpOnly: true,
+        secure: true,
+      });
+      console.log(`[LinkedIn] ✅ li_at cookie injected.`);
+    } else {
+      console.log(`[LinkedIn] Step 1/6: No LINKEDIN_LI_AT set, relying on userDataDir session.`);
+    }
 
-    // Go to feed to check if we are logged in
+    // ── STEP 2: Verify we are actually logged in ───────────────────────────────
+    console.log(`[LinkedIn] Step 2/6: Verifying session by navigating to feed...`);
     await page.goto('https://www.linkedin.com/feed/', { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await new Promise((r) => setTimeout(r, 3000)); // Wait for redirects
+    await new Promise((r) => setTimeout(r, 3000)); // Wait for any client-side redirects
 
     const currentUrl = page.url();
-    const isLoggedIn = currentUrl.includes('/feed') || currentUrl.includes('/dashboard');
+    const isLoggedIn = currentUrl.includes('/feed') || currentUrl.includes('/dashboard') || currentUrl.includes('/home');
+    console.log(`[LinkedIn] Current URL after feed nav: ${currentUrl} | loggedIn=${isLoggedIn}`);
 
-    if (isLoggedIn) {
-      console.log(`[LinkedIn] ✅ Already logged in! Skipping login process.`);
-    } else {
-      console.log(`[LinkedIn] ⚠️ Not logged in. Proceeding to login page...`);
+    if (!isLoggedIn) {
+      // ── STEP 3: Fall back to credential login ─────────────────────────────
+      console.log(`[LinkedIn] Step 3/6: Session invalid. Attempting credential login...`);
+      const loginUrl = 'https://www.linkedin.com/login';
       await page.goto(loginUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-      console.log(`[LinkedIn] Step 2/6: detect login form`);
-      const usernameSel = '#username';
-      const passwordSel = '#password';
+      const usernameEl = await page.$('#username');
+      const passwordEl = await page.$('#password');
 
-      const usernameEl = await page.$(usernameSel);
-      const passwordEl = await page.$(passwordSel);
-      const hasUsername = Boolean(usernameEl);
-      const hasPassword = Boolean(passwordEl);
+      console.log(`[LinkedIn] url=${page.url()} title=${await page.title()} loginForm=${Boolean(usernameEl && passwordEl)}`);
 
-      console.log(`[LinkedIn] url=${page.url()} title=${await page.title()} loginForm=${hasUsername && hasPassword}`);
-
-      if (hasUsername && hasPassword) {
-        console.log(`[LinkedIn] Step 3/6: submit credentials`);
-        if (usernameEl) await usernameEl.type(email, { delay: 50 });
-        if (passwordEl) await passwordEl.type(password, { delay: 50 });
-
+      if (usernameEl && passwordEl) {
+        console.log(`[LinkedIn] Step 4/6: Submitting credentials...`);
+        await usernameEl.type(email, { delay: 50 });
+        await passwordEl.type(password, { delay: 50 });
         await page.click('button[type="submit"]');
 
-        console.log(`[LinkedIn] Step 4/6: wait for post-login navigation`);
-        
         try {
-          // Relaxed wait condition: domcontentloaded is usually enough to know we moved away
-          // Limit the timeout to 15 seconds to gracefully handle slow loads/hanging
           await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 });
         } catch (e: any) {
           console.log(`[LinkedIn] Login navigation wait ended or timed out: ${e?.message}`);
         }
 
-        // DEBUG: Check where we are after login
         const postLoginUrl = page.url();
         console.log(`[LinkedIn] Post-login URL: ${postLoginUrl}`);
 
-        // CHECKPOINT DETECTION V1 (Immediately after login)
         if (postLoginUrl.includes('/checkpoint/') || postLoginUrl.includes('/authwall')) {
-          console.warn(`[LinkedIn] Checkpoint detected immediately after login!`);
-
-          if (recaptchaSolver) {
-            console.log(`[LinkedIn] Attempting to solve reCAPTCHA (post-login)...`);
-            const solved = await recaptchaSolver.solve(page);
-            if (solved) {
-              console.log(`[LinkedIn] reCAPTCHA solved! Waiting for navigation...`);
-              await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => undefined);
-            } else {
-              console.warn(`[LinkedIn] Failed to solve reCAPTCHA (post-login).`);
-              throw new Error('Failed to solve checkpoint after login');
-            }
-          } else {
-            throw new Error('Blocked by checkpoint after login (no solver available)');
-          }
+          console.warn(`[LinkedIn] Checkpoint detected after credential login — cannot proceed without manual verification.`);
+          throw new Error('Blocked by LinkedIn checkpoint after login');
         }
+
+        const afterLoginUrl = page.url();
+        const loggedInAfterCreds = afterLoginUrl.includes('/feed') || afterLoginUrl.includes('/dashboard') || afterLoginUrl.includes('/home');
+        if (!loggedInAfterCreds) {
+          console.warn(`[LinkedIn] Credential login did not result in a feed page. URL: ${afterLoginUrl}`);
+          throw new Error('Credential login failed — could not reach LinkedIn feed');
+        }
+        console.log(`[LinkedIn] ✅ Credential login successful.`);
       } else {
-        console.log(`[LinkedIn] Step 3/6: login form not found (already logged in?)`);
+        console.warn(`[LinkedIn] Login form not found and not logged in. URL: ${page.url()} Title: ${await page.title()}`);
+        throw new Error('Could not log in to LinkedIn: login form not detected and no valid session');
       }
+    } else {
+      console.log(`[LinkedIn] ✅ Session is valid.`);
     }
 
     // Navigate to posts page
@@ -139,6 +138,12 @@ export async function getAllLinkedInArticles(
     }
 
     console.log(`[LinkedIn] Step 6/6: Extracting articles...`);
+
+    // DEBUG: log current URL and post count before extraction
+    const finalUrl = page.url();
+    const finalTitle = await page.title();
+    const postCount = await page.evaluate(() => document.querySelectorAll('.feed-shared-update-v2').length);
+    console.log(`[LinkedIn] Final URL: ${finalUrl} | Title: ${finalTitle} | .feed-shared-update-v2 count: ${postCount}`);
 
     // Pass latestArticleDate to the browser context
     const articles = await page.evaluate((articleType, companyName) => {
