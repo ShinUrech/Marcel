@@ -58,11 +58,17 @@ const NewsCardItem = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row relative border-t py-10 gap-10">
+    <div className="flex flex-col relative border-t py-10 gap-10">
+      {(article.imageLocal || article.googleImage) && (
+        <div className="w-full">
+          <div className="relative h-[400px] image-frame flex justify-start">
+            {cardImage(article.imageLocal, article.googleImage)}
+          </div>
+        </div>
+      )}
+
       <div
-        className={`w-full ${
-          (article.imageLocal || article.googleImage) && 'sm:w-2/5'
-        }  flex flex-col gap-5 ${isSearch && 'w-full'}`}
+        className={`w-full flex flex-col gap-5`}
       >
         <div
           className={`flex w-full flex-col justify-between flex-1 ${
@@ -92,27 +98,21 @@ const NewsCardItem = ({
                 </>
               )}
             </div>
-            <p className={`${figtree.className} text-gray-500 line-clamp-10 `}>
-              {article.generatedTeaser}
-            </p>
+            {article.generatedTeaser && (
+              <p className={`${figtree.className} text-gray-500 line-clamp-10 `}>
+                {article.generatedTeaser}
+              </p>
+            )}
           </div>
           <Link
             href={`/article/${article._id}`}
-            className={`${figtree.className} flex items-center gap-2 hidden sm:flex transition-all duration-300 hover:pl-5 hover:text-[#134074]`}
+            className={`${figtree.className} flex items-center gap-2 hidden sm:flex transition-all duration-300 hover:pl-5 hover:text-[#134074] mt-5 justify-start`}
           >
             {t('seeMore')}
             <Icon icon="oui:arrow-right" width="16" height="16" />
           </Link>
         </div>
       </div>
-
-      {(article.imageLocal || article.googleImage) && (
-        <div className="w-3/5 w-full ">
-          <div className="relative h-[400px] image-frame">
-            {cardImage(article.imageLocal, article.googleImage)}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

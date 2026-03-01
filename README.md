@@ -143,11 +143,54 @@ curl http://localhost:5000/api/scraper/youtube/BLSBahn
 curl http://localhost:5000/api/scraper/youtube/stadlerrailgroup
 
 # LinkedIn
-curl http://localhost:5000/api/scraper/linkedin/sob-suedostbahn
+curl http://localhost:5000/api/scraper/linkedin/sbb-cff-ffs
+curl http://localhost:5000/api/scraper/linkedin/bls-ag
 
 # Format dates after scraping
 curl http://localhost:5000/api/scraper/formateDates
 ```
+
+---
+
+## LinkedIn Scraping — Session Setup
+
+LinkedIn scraping requires a **persistent browser session** (cookies + local storage). This must be set up once locally and then synced to the server. LinkedIn does not allow automated login without triggering CAPTCHAs.
+
+### Step 1 — Log in locally (one-time setup, repeat when session expires)
+
+Run the manual login script on your **local machine** (requires a display):
+
+```bash
+cd project-marcel-be
+npx ts-node manual-login.ts
+```
+
+A Chromium browser will open. Log in to LinkedIn, complete any CAPTCHAs, wait until you see your feed, then **close the browser**. The session is saved to `puppeteer_data/linkedin/`.
+
+### Step 2 — Deploy to server
+
+```bash
+# Sync the session files to your server
+rsync -avz ./puppeteer_data/ user@your-server:/path/to/marcel/puppeteer_data/
+```
+
+Docker automatically mounts this directory into the backend container via:
+```yaml
+volumes:
+  - ./puppeteer_data:/app/puppeteer_data
+```
+
+### Step 3 — Restart backend
+
+```bash
+docker-compose restart backend
+```
+
+### When the session expires
+
+LinkedIn sessions typically last several weeks. When scraping starts returning 0 articles or login errors, repeat Steps 1 & 2.
+
+> ⚠️ **Never commit `puppeteer_data/`** — it contains your personal LinkedIn session. It is already in `.gitignore`.
 
 ---
 

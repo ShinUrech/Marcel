@@ -70,25 +70,27 @@ const LinkedInCard = ({ id }: { id: string | undefined }) => {
           )}
         </div>
       </div>
-      <div className="w-full bg-gray">
-        <div className="relative h-[400px]">
-          {coverImage ? (
-            <Image
-              className="shadow object-cover"
-              src={coverImage}
-              alt="Example"
-              fill
-            />
-          ) : (
-            article.metadata?.icon && (
-              <FramedImage
-                src={article.metadata?.icon}
-                alt="Linkedin Image Post"
+      {(article.imageLocal || article.googleImage) && (
+        <div className="w-full">
+          <div className="relative h-[400px]">
+            {coverImage ? (
+              <Image
+                className="shadow object-cover"
+                src={coverImage}
+                alt="Example"
+                fill
               />
-            )
-          )}
+            ) : (
+              article.metadata?.icon && (
+                <FramedImage
+                  src={article.metadata?.icon}
+                  alt="Linkedin Image Post"
+                />
+              )
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <div className="content text-justify">
         {article?.originalContent && (
           <div

@@ -29,11 +29,14 @@ services:
       APP_NAME: BE_CORE
       MONGO_URI: mongodb://mongo:27017/practicedb
       CHATGPT_API_KEY: ${CHATGPT_API_KEY:-sk-placeholder}
+      LINKEDIN_EMAIL: ${LINKEDIN_EMAIL:-}
+      LINKEDIN_PASSWORD: ${LINKEDIN_PASSWORD:-}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
     depends_on:
       - mongo
     volumes:
       - backend-public:/app/public
+      - ./puppeteer_data:/app/puppeteer_data
     networks:
       - marcel-network
 
@@ -43,8 +46,8 @@ services:
       context: ./project-marcel-fe
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_SERVER_URL: http://backend:5000/api
-        NEXT_PUBLIC_SERVER_FILE_HOST: http://backend:5000/api/articles/show/
+        NEXT_PUBLIC_SERVER_URL: http://localhost:5000/api
+        NEXT_PUBLIC_SERVER_FILE_HOST: http://localhost:5000/api/articles/show/
     container_name: marcel-frontend
     restart: unless-stopped
     ports:
@@ -53,8 +56,10 @@ services:
       NODE_ENV: production
       APP_TITLE: IRISO Bau AG
       APP_DESCRIPTION: Rail Services News
-      NEXT_PUBLIC_SERVER_URL: http://backend:5000/api
-      NEXT_PUBLIC_SERVER_FILE_HOST: http://backend:5000/api/articles/show/
+      NEXT_PUBLIC_SERVER_URL: http://localhost:5000/api
+      NEXT_PUBLIC_SERVER_FILE_HOST: http://localhost:5000/api/articles/show/
+      # Add server-side internal API URL
+      INTERNAL_API_URL: http://backend:5000/api
       GMAIL_USER: ${GMAIL_USER:-user@gmail.com}
       GMAIL_APP_PASS: ${GMAIL_APP_PASS:-placeholder}
       APP_NAME: IRISO Bau AG

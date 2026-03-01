@@ -28,6 +28,9 @@ Thumbs.db
 # Docker volumes
 mongo-data/
 
+# LinkedIn persistent browser session (contains personal login data — sync manually to server via rsync)
+puppeteer_data/
+
 # Temp files
 check-db.js
 

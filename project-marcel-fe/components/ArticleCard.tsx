@@ -101,7 +101,7 @@ const ArticleCard = ({ id }: { id: string | undefined }) => {
         </div>
       </div>
       {(article.imageLocal || article.googleImage) && (
-        <div className="w-full bg-gray">
+        <div className="w-full">
           <div className="relative h-[400px]">
             {cardImage(article.imageLocal, article.googleImage)}
           </div>

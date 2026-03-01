@@ -12,15 +12,20 @@ interface FramedImageProps {
 }
 
 const FramedImage = ({ src, alt }: FramedImageProps) => {
-  const [bgColor, setBgColor] = useState<string>('#f0f0f0'); // Default frame color
+  const [bgColor, setBgColor] = useState<string>('transparent'); // Default frame color
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const extractColor = async () => {
       if (imgRef.current && imgRef.current.complete) {
-        const colorThief = new ColorThief();
-        const color = colorThief.getColor(imgRef.current);
-        setBgColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+        try {
+          const colorThief = new ColorThief();
+          const color = colorThief.getColor(imgRef.current);
+          setBgColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+        } catch (e) {
+          // Fallback if color extraction fails
+          setBgColor('transparent');
+        }
       }
     };
 
@@ -38,7 +43,7 @@ const FramedImage = ({ src, alt }: FramedImageProps) => {
       className="shadow flex w-full h-full items-center justify-center"
       style={{ backgroundColor: bgColor }}
     >
-      <div className="rounded-lg w-[80] h-[80] bg-gray">
+      <div className="rounded-lg w-[80] h-[80]">
         <Image
           ref={imgRef}
           src={src}

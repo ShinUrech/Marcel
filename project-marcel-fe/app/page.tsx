@@ -21,14 +21,17 @@ export default async function Home({ searchParams }: Props) {
   const currentPage = Number(page) || 1;
 
   try {
+    // Use an internal docker network URL if defined (for SSR), otherwise fallback to the public URL
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_SERVER_URL;
+    
     const [res, resVids] = await Promise.all([
       fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/articles?page=${currentPage}`,
+        `${apiUrl}/articles?page=${currentPage}`,
         {
           cache: 'no-store',
         }
       ),
-      fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/articles/videos`, {
+      fetch(`${apiUrl}/articles/videos`, {
         cache: 'no-store',
       }),
     ]);

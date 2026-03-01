@@ -65,7 +65,7 @@ const VideoCard = ({ id }: { id: string | undefined }) => {
           )}
         </div>
       </div>
-      <div className="w-full bg-gray">
+      <div className="w-full">
         <div className="relative h-[400px]">
           {article?.url && getEmbedLink(article.url) ? (
             // <iframe
