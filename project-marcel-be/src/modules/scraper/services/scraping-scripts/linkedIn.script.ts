@@ -4,6 +4,7 @@ import { ArticleType } from 'src/models/articles.models';
 import { isAllowedLinkedInCompany } from '../scraping-config/target-sources.config';
 import { RecaptchaSolverService } from '../recaptcha-solver.service';
 import * as path from 'path';
+import * as fs from 'fs';
 import { parseRelativeDateLinkedIn } from 'src/common/utils/format-date';
 
 function getLinkedInCredentials() {
@@ -36,16 +37,36 @@ export async function getAllLinkedInArticles(
 
   console.log(`✅ LinkedIn company '${companyName}' is approved. Starting scraping...`);
 
-  // Use persistent user data directory to save session
+  // Use persistent user data directory only when li_at is NOT available
+  const liAtCookie = (process.env.LINKEDIN_LI_AT || '').trim();
   const userDataDir = path.resolve(process.cwd(), 'puppeteer_data', 'linkedin');
-  console.log(`[LinkedIn] Using persistent userDataDir: ${userDataDir}`);
 
-  const { browser, page } = await getPuppeteerInstance([], { userDataDir });
+  if (liAtCookie) {
+    // When using li_at, don't rely on a shared userDataDir (avoids SingletonLock conflicts)
+    console.log(`[LinkedIn] Using li_at cookie — no userDataDir needed.`);
+    // Clean up any stale SingletonLock from a previous crashed session
+    const lockFile = path.join(userDataDir, 'SingletonLock');
+    if (fs.existsSync(lockFile)) {
+      fs.unlinkSync(lockFile);
+      console.log(`[LinkedIn] Removed stale SingletonLock.`);
+    }
+  } else {
+    console.log(`[LinkedIn] Using persistent userDataDir: ${userDataDir}`);
+    // Clean up stale lock if present
+    const lockFile = path.join(userDataDir, 'SingletonLock');
+    if (fs.existsSync(lockFile)) {
+      fs.unlinkSync(lockFile);
+      console.log(`[LinkedIn] Removed stale SingletonLock.`);
+    }
+  }
+
+  // When li_at is set, don't use a shared userDataDir (avoids lock conflicts and stale sessions)
+  const puppeteerOptions = liAtCookie ? {} : { userDataDir };
+  const { browser, page } = await getPuppeteerInstance([], puppeteerOptions);
 
   try {
     // ── STEP 1: Inject li_at cookie (if provided) on the LinkedIn domain ──────
     // Cookies can only be reliably set after a navigation to the target domain.
-    const liAtCookie = (process.env.LINKEDIN_LI_AT || '').trim();
     if (liAtCookie) {
       console.log(`[LinkedIn] Step 1/6: Injecting li_at cookie on LinkedIn domain...`);
       // Navigate to the root to establish the domain context
@@ -73,10 +94,21 @@ export async function getAllLinkedInArticles(
     console.log(`[LinkedIn] Current URL after feed nav: ${currentUrl} | loggedIn=${isLoggedIn}`);
 
     if (!isLoggedIn) {
+      if (liAtCookie) {
+        // li_at was provided but didn't work — it's expired or IP-locked
+        console.error(`[LinkedIn] ❌ LINKEDIN_LI_AT cookie is invalid for this server IP.`);
+        console.error(`[LinkedIn] Action required: get a fresh li_at from your browser at https://www.linkedin.com`);
+        console.error(`[LinkedIn]   1. Open DevTools → Application → Cookies → https://www.linkedin.com`);
+        console.error(`[LinkedIn]   2. Copy the value of the 'li_at' cookie`);
+        console.error(`[LinkedIn]   3. Update LINKEDIN_LI_AT in /opt/marcel/.env on the server and restart backend`);
+        throw new Error('LINKEDIN_LI_AT cookie is expired or IP-restricted. Please refresh it.');
+      }
+
       // ── STEP 3: Fall back to credential login ─────────────────────────────
       console.log(`[LinkedIn] Step 3/6: Session invalid. Attempting credential login...`);
       const loginUrl = 'https://www.linkedin.com/login';
-      await page.goto(loginUrl, { waitUntil: 'networkidle2', timeout: 60000 });
+      await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await new Promise((r) => setTimeout(r, 3000)); // Wait for JS to render the form
 
       const usernameEl = await page.$('#username');
       const passwordEl = await page.$('#password');
@@ -99,20 +131,18 @@ export async function getAllLinkedInArticles(
         console.log(`[LinkedIn] Post-login URL: ${postLoginUrl}`);
 
         if (postLoginUrl.includes('/checkpoint/') || postLoginUrl.includes('/authwall')) {
-          console.warn(`[LinkedIn] Checkpoint detected after credential login — cannot proceed without manual verification.`);
-          throw new Error('Blocked by LinkedIn checkpoint after login');
+          console.error(`[LinkedIn] ❌ LinkedIn security checkpoint from this server IP — credential login blocked.`);
+          console.error(`[LinkedIn] Action required: provide a fresh li_at cookie from your local browser in LINKEDIN_LI_AT.`);
+          throw new Error('LinkedIn credential login blocked by security checkpoint on this server IP');
         }
 
-        const afterLoginUrl = page.url();
-        const loggedInAfterCreds = afterLoginUrl.includes('/feed') || afterLoginUrl.includes('/dashboard') || afterLoginUrl.includes('/home');
+        const loggedInAfterCreds = postLoginUrl.includes('/feed') || postLoginUrl.includes('/dashboard') || postLoginUrl.includes('/home');
         if (!loggedInAfterCreds) {
-          console.warn(`[LinkedIn] Credential login did not result in a feed page. URL: ${afterLoginUrl}`);
-          throw new Error('Credential login failed — could not reach LinkedIn feed');
+          throw new Error(`Credential login failed — landed on: ${postLoginUrl}`);
         }
         console.log(`[LinkedIn] ✅ Credential login successful.`);
       } else {
-        console.warn(`[LinkedIn] Login form not found and not logged in. URL: ${page.url()} Title: ${await page.title()}`);
-        throw new Error('Could not log in to LinkedIn: login form not detected and no valid session');
+        throw new Error(`LinkedIn login form not found. URL: ${page.url()}`);
       }
     } else {
       console.log(`[LinkedIn] ✅ Session is valid.`);
@@ -139,11 +169,22 @@ export async function getAllLinkedInArticles(
 
     console.log(`[LinkedIn] Step 6/6: Extracting articles...`);
 
-    // DEBUG: log current URL and post count before extraction
+    // DEBUG: log current URL, title, and probe multiple known selectors
     const finalUrl = page.url();
     const finalTitle = await page.title();
-    const postCount = await page.evaluate(() => document.querySelectorAll('.feed-shared-update-v2').length);
-    console.log(`[LinkedIn] Final URL: ${finalUrl} | Title: ${finalTitle} | .feed-shared-update-v2 count: ${postCount}`);
+    const selectorProbe = await page.evaluate(() => {
+      const selectors = [
+        '.feed-shared-update-v2',
+        '[data-urn]',
+        '.scaffold-finite-scroll__content > div',
+        '.occludable-update',
+        'li.profile-creator-shared-feed-update__container',
+        '.update-components-text',
+      ];
+      return selectors.map(s => `${s}: ${document.querySelectorAll(s).length}`).join(' | ');
+    });
+    console.log(`[LinkedIn] Final URL: ${finalUrl} | Title: ${finalTitle}`);
+    console.log(`[LinkedIn] Selector probe: ${selectorProbe}`);
 
     // Pass latestArticleDate to the browser context
     const articles = await page.evaluate((articleType, companyName) => {

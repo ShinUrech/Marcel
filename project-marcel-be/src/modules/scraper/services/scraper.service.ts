@@ -579,9 +579,10 @@ export class ScraperService {
       { name: 'YouTube: Stadler Rail', fn: () => this.getAllVideos('StadlerRail') },
       { name: 'YouTube: Siemens Mobility', fn: () => this.getAllVideos('SiemensMobility') },
       { name: 'YouTube: Alstom', fn: () => this.getAllVideos('AlstomOfficial') },
-      // LinkedIn rail companies
-      { name: 'LinkedIn: SBB', fn: () => this.getAllLinkedInArticles('sbb-cff-ffs') },
-      { name: 'LinkedIn: BLS', fn: () => this.getAllLinkedInArticles('bls-ag') },
+      // NOTE: LinkedIn scraping is excluded from the automated batch.
+      // It must be run manually from a trusted local machine via:
+      //   GET /api/scraper/linkedin/sbb-cff-ffs
+      //   GET /api/scraper/linkedin/bls-ag
     ];
 
     for (const source of sources) {

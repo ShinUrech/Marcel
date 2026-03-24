@@ -1,19 +1,11 @@
-services:
-  # ─── MongoDB ───────────────────────────────────────────────
-  mongo:
-    image: mongo:7
-    container_name: marcel-mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: practicedb
-    volumes:
-      - mongo-data:/data/db
-      - ./mongo-init:/docker-entrypoint-initdb.d:ro
-    networks:
-      - marcel-network
+# Production compose — DigitalOcean Droplet
+# Uses MongoDB Atlas (MONGO_URI in .env), no local mongo or frontend.
+# Frontend is deployed separately on Vercel.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
 
+services:
   # ─── Backend (NestJS) ─────────────────────────────────────
   backend:
     build:
@@ -27,51 +19,15 @@ services:
       NODE_ENV: production
       PORT: 5000
       APP_NAME: BE_CORE
-      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017/practicedb}
-      CHATGPT_API_KEY: ${CHATGPT_API_KEY:-sk-placeholder}
+      MONGO_URI: ${MONGO_URI}
+      CHATGPT_API_KEY: ${CHATGPT_API_KEY}
       LINKEDIN_EMAIL: ${LINKEDIN_EMAIL:-}
       LINKEDIN_PASSWORD: ${LINKEDIN_PASSWORD:-}
       LINKEDIN_LI_AT: ${LINKEDIN_LI_AT:-}
       PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
-    depends_on:
-      - mongo
     volumes:
       - backend-public:/app/public
       - ./puppeteer_data:/app/puppeteer_data
-    networks:
-      - marcel-network
-
-  # ─── Frontend (Next.js) ───────────────────────────────────
-  frontend:
-    build:
-      context: ./project-marcel-fe
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SERVER_URL: http://localhost:5000/api
-        NEXT_PUBLIC_SERVER_FILE_HOST: http://localhost:5000/api/articles/show/
-    container_name: marcel-frontend
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
-      APP_TITLE: IRISO Bau AG
-      APP_DESCRIPTION: Rail Services News
-      NEXT_PUBLIC_SERVER_URL: http://localhost:5000/api
-      NEXT_PUBLIC_SERVER_FILE_HOST: http://localhost:5000/api/articles/show/
-      # Add server-side internal API URL
-      INTERNAL_API_URL: http://backend:5000/api
-      GMAIL_USER: ${GMAIL_USER:-user@gmail.com}
-      GMAIL_APP_PASS: ${GMAIL_APP_PASS:-placeholder}
-      APP_NAME: IRISO Bau AG
-      APP_EMAIL: info@irisobau.ch
-      TWITTER_LINK: ""
-      FACEBOOK_LINK: ""
-      INSTAGRAM_LINK: ""
-      YOUTUBE_LINK: ""
-      TELEGRAM_LINK: ""
-    depends_on:
-      - backend
     networks:
       - marcel-network
 
@@ -84,34 +40,25 @@ services:
     command:
       - -c
       - |
-        echo "Scraper cron started. Schedule: daily at 03:00 + weekly on Sunday at 06:00"
+        echo "Scraper cron started. Daily 03:00 + weekly Sunday 06:00"
         while true; do
           HOUR=$$(date +%H)
           MINUTE=$$(date +%M)
           DAY=$$(date +%u)
-          # Daily scrape at 03:00
           if [ "$$HOUR" = "03" ] && [ "$$MINUTE" = "00" ]; then
             echo "[CRON] $$(date) - Starting daily scrape..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/scrape-all || true
-            echo "[CRON] Daily scrape triggered"
             sleep 120
-            # Generate image search context for articles without images
-            echo "[CRON] $$(date) - Generating image titles..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/image-title || true
             sleep 60
-            # Search Google for high-quality images
-            echo "[CRON] $$(date) - Searching for better images..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/better-images || true
-            echo "[CRON] Image generation complete"
             sleep 120
           fi
-          # Weekly content generation on Sunday at 06:00
           if [ "$$DAY" = "7" ] && [ "$$HOUR" = "06" ] && [ "$$MINUTE" = "00" ]; then
             echo "[CRON] $$(date) - Starting weekly content generation..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/content || true
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/teaser || true
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/better-images || true
-            echo "[CRON] Weekly generation triggered"
             sleep 120
           fi
           sleep 60
@@ -122,7 +69,6 @@ services:
       - marcel-network
 
 volumes:
-  mongo-data:
   backend-public:
 
 networks:
