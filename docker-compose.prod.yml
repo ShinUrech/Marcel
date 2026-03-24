@@ -49,10 +49,6 @@ services:
             echo "[CRON] $$(date) - Starting daily scrape + ChatGPT rewrite..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/scrape-all || true
             sleep 120
-            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/linkedin/sbb-cff-ffs || true
-            sleep 60
-            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/linkedin/bls-ag || true
-            sleep 60
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/download || true
             sleep 60
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/content || true
