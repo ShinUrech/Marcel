@@ -5,7 +5,7 @@ export const env = cleanEnv(process.env, {
 
   // Public variables (can be relative paths or full URLs)
   NEXT_PUBLIC_SERVER_URL: str(),
-  NEXT_PUBLIC_SERVER_FILE_HOST: str(),
+  NEXT_PUBLIC_SERVER_FILE_HOST: str({ default: '' }),
 
   // SMTP Config
   GMAIL_USER: str(),

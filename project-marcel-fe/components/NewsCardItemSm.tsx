@@ -16,7 +16,7 @@ const NewsCardItemSm = ({ article }: { article: IArticle }) => {
       return (
         <Image
           className="border-2 border-white shadow object-cover"
-          src={`${process.env.NEXT_PUBLIC_SERVER_FILE_HOST}${googleImage}`}
+          src={`${process.env.NEXT_PUBLIC_SERVER_URL}/articles/show/${googleImage}`}
           alt="Example"
           fill
         />
@@ -26,7 +26,7 @@ const NewsCardItemSm = ({ article }: { article: IArticle }) => {
       return (
         <Image
           className="border-2 border-white shadow object-cover"
-          src={`${process.env.NEXT_PUBLIC_SERVER_FILE_HOST}${imageLocal}`}
+          src={`${process.env.NEXT_PUBLIC_SERVER_URL}/articles/show/${imageLocal}`}
           alt="Example"
           fill
         />

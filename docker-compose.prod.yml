@@ -46,18 +46,15 @@ services:
           MINUTE=$$(date +%M)
           DAY=$$(date +%u)
           if [ "$$HOUR" = "03" ] && [ "$$MINUTE" = "00" ]; then
-            echo "[CRON] $$(date) - Starting daily scrape..."
+            echo "[CRON] $$(date) - Starting daily scrape + ChatGPT rewrite..."
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/scraper/scrape-all || true
             sleep 120
+            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/content || true
+            sleep 60
+            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/teaser || true
+            sleep 60
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/image-title || true
             sleep 60
-            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/better-images || true
-            sleep 120
-          fi
-          if [ "$$DAY" = "7" ] && [ "$$HOUR" = "06" ] && [ "$$MINUTE" = "00" ]; then
-            echo "[CRON] $$(date) - Starting weekly content generation..."
-            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/content || true
-            curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/teaser || true
             curl -s -o /dev/null -w "HTTP %{http_code}" http://backend:5000/api/content-generator/better-images || true
             sleep 120
           fi

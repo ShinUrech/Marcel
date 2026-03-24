@@ -22,7 +22,7 @@ const VideoCardItem = ({ article }: { article: IArticle }) => {
               className="rounded-xs object-cover"
               src={
                 article.imageLocal &&
-                `${process.env.NEXT_PUBLIC_SERVER_FILE_HOST}${article.imageLocal}`
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/articles/show/${article.imageLocal}`
               }
               alt="Example"
               fill

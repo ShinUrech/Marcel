@@ -11,10 +11,10 @@ const franklinGothic = localFont({
   src: '../public/fonts/Franklin Gothic Heavy Regular.ttf',
 });
 const LinkedInPostItem = ({ article }: { article: IArticle }) => {
-  const serverFileHost = process.env.NEXT_PUBLIC_SERVER_FILE_HOST || '';
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || '';
   const coverImage =
     article.imageLocal && article.imageLocal !== 'N/A'
-      ? `${serverFileHost}${article.imageLocal}`
+      ? `${serverUrl}/articles/show/${article.imageLocal}`
       : article.image && article.image !== 'N/A'
         ? article.image
         : undefined;
