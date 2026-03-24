@@ -198,10 +198,19 @@ export class ContentGeneratorService {
       if (article.imageTitleContext && !article.imageLocal) {
         imgIdx++;
         console.log(`(${imgIdx})---> I should Search for: ${article.imageTitleContext}`);
-        const { url, width, height } = await getImage(article.imageTitleContext);
-        const filename = await downloadImage(url);
-        console.log('-----> New Image Dimensions: ', width, height);
-        await this.articlesService.findAndUpdateGoogleImage(article._id, filename);
+        try {
+          const result = await getImage(article.imageTitleContext);
+          if (!result || !result.url) {
+            console.log(`---> No image found for: ${article.imageTitleContext}`);
+            continue;
+          }
+          const { url, width, height } = result;
+          const filename = await downloadImage(url);
+          console.log('-----> New Image Dimensions: ', width, height);
+          await this.articlesService.findAndUpdateGoogleImage(article._id, filename);
+        } catch (error) {
+          console.log(`---> Error getting image for: ${article.imageTitleContext}`, error);
+        }
       }
     }
     return articles;
