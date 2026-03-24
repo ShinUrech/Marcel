@@ -16,8 +16,12 @@ const LinkedInPage = async ({ searchParams }: Props) => {
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
 
+  const apiUrl = process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api`
+    : process.env.NEXT_PUBLIC_SERVER_URL;
+
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}/articles/linkedin?page=${currentPage}`,
+    `${apiUrl}/articles/linkedin?page=${currentPage}`,
     {
       cache: 'no-store',
     }

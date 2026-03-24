@@ -16,10 +16,14 @@ const VideosPage = async ({ searchParams }: Props) => {
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
 
+  const apiUrl = process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api`
+    : process.env.NEXT_PUBLIC_SERVER_URL;
+
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}/articles/videos?page=${currentPage}`,
+    `${apiUrl}/articles/videos?page=${currentPage}`,
     {
-      cache: 'no-store', // Ensures fresh data on each request (SSR)
+      cache: 'no-store',
     }
   );
 
