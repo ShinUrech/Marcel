@@ -1,11 +1,11 @@
-import { cleanEnv, str, url } from 'envalid';
+import { cleanEnv, str } from 'envalid';
 
 export const env = cleanEnv(process.env, {
   NODE_ENV: str({ choices: ['development', 'production', 'test'] }),
 
-  // Public variables
-  NEXT_PUBLIC_SERVER_URL: url(),
-  NEXT_PUBLIC_SERVER_FILE_HOST: url(),
+  // Public variables (can be relative paths or full URLs)
+  NEXT_PUBLIC_SERVER_URL: str(),
+  NEXT_PUBLIC_SERVER_FILE_HOST: str(),
 
   // SMTP Config
   GMAIL_USER: str(),
