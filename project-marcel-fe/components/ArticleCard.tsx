@@ -100,13 +100,11 @@ const ArticleCard = ({ id }: { id: string | undefined }) => {
           )}
         </div>
       </div>
-      {(article.imageLocal || article.googleImage) && (
-        <div className="w-full">
-          <div className="relative h-[400px]">
-            {cardImage(article.imageLocal, article.googleImage)}
-          </div>
+      <div className="w-full">
+        <div className="relative h-[400px]">
+          {cardImage(article.imageLocal, article.googleImage)}
         </div>
-      )}
+      </div>
 
       <div className="content text-justify">
         {(article?.generatedContent || article?.originalContent) && (

@@ -59,13 +59,11 @@ const NewsCardItem = ({
 
   return (
     <div className="flex flex-col relative border-t py-10 gap-10">
-      {(article.imageLocal || article.googleImage) && (
-        <div className="w-full">
-          <div className="relative h-[400px] image-frame flex justify-start">
-            {cardImage(article.imageLocal, article.googleImage)}
-          </div>
+      <div className="w-full">
+        <div className="relative h-[400px] image-frame flex justify-start">
+          {cardImage(article.imageLocal, article.googleImage)}
         </div>
-      )}
+      </div>
 
       <div
         className={`w-full flex flex-col gap-5`}

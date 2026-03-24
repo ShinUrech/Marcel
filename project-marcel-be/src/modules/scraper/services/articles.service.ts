@@ -46,7 +46,7 @@ export class ArticlesService {
       .find({
         $and: [
           {
-            $or: [{ generatedContent: { $exists: false } }, { generatedContent: { $eq: '' } }],
+            $or: [{ generatedContent: { $exists: false } }, { generatedContent: { $eq: '' } }, { generatedContent: null }],
           },
           { type: ArticleType.News },
         ],
@@ -60,7 +60,7 @@ export class ArticlesService {
       .find({
         $and: [
           {
-            $or: [{ imageTitleContext: { $exists: false } }, { imageTitleContext: { $eq: '' } }],
+            $or: [{ imageTitleContext: { $exists: false } }, { imageTitleContext: { $eq: '' } }, { imageTitleContext: null }],
           },
           { type: ArticleType.News },
         ],
@@ -74,7 +74,7 @@ export class ArticlesService {
       .find({
         $and: [
           {
-            $or: [{ generatedTeaser: { $exists: false } }, { generatedTeaser: { $eq: '' } }],
+            $or: [{ generatedTeaser: { $exists: false } }, { generatedTeaser: { $eq: '' } }, { generatedTeaser: null }],
           },
           { type: ArticleType.News },
         ],
@@ -88,7 +88,7 @@ export class ArticlesService {
       .find({
         $and: [
           {
-            $or: [{ googleImage: { $exists: false } }, { googleImage: { $eq: '' } }],
+            $or: [{ googleImage: { $exists: false } }, { googleImage: { $eq: '' } }, { googleImage: null }],
           },
           { type: ArticleType.News },
         ],
@@ -102,7 +102,7 @@ export class ArticlesService {
       .find({
         $and: [
           {
-            $or: [{ generatedContent: { $exists: false } }, { generatedContent: { $eq: '' } }],
+            $or: [{ generatedContent: { $exists: false } }, { generatedContent: { $eq: '' } }, { generatedContent: null }],
           },
           { type: ArticleType.Video },
         ],

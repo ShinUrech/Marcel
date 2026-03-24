@@ -49,8 +49,7 @@ const NewsCardItemSm = ({ article }: { article: IArticle }) => {
         className=" transition-all duration-300 hover:text-[#134074]"
       >
         <div className="relative w-full h-[200px]">
-          {(article.imageLocal || article.googleImage) &&
-            cardImage(article.imageLocal, article.googleImage)}
+          {cardImage(article.imageLocal, article.googleImage)}
         </div>
         <h3 className="font-bold text-blue mt-4 uppercase">{article.type}</h3>
         <h3 className={`${franklinGothic.className} mb-2`}>{article.title}</h3>
