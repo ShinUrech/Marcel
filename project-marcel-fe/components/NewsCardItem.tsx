@@ -50,8 +50,8 @@ const NewsCardItem = ({
     return (
       <Image
         className="border-20 border-white shadow object-contain"
-        src={`/article-img-placeholder.webp`}
-        alt="Example"
+        src={`/iriso-bau-logo.png`}
+        alt="IRISO BAU AG"
         fill
       />
     );

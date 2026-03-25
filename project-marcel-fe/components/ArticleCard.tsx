@@ -74,8 +74,8 @@ const ArticleCard = ({ id }: { id: string | undefined }) => {
     return (
       <Image
         className="border-20 border-white shadow object-contain"
-        src={`/image-placeholder.jpg`}
-        alt="Example"
+        src={`/iriso-bau-logo.png`}
+        alt="IRISO BAU AG"
         fill
       />
     );
