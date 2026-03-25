@@ -581,7 +581,7 @@ export class ScraperService {
       { name: 'YouTube: Alstom', fn: () => this.getAllVideos('AlstomOfficial') },
       // NOTE: LinkedIn scraping is excluded from the automated batch.
       // It must be run manually from a trusted local machine via:
-      //   GET /api/scraper/linkedin/sbb-cff-ffs
+      //   GET /api/scraper/linkedin/sbb
       //   GET /api/scraper/linkedin/bls-ag
     ];
 
