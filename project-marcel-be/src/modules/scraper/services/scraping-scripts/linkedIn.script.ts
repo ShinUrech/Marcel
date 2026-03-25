@@ -104,14 +104,21 @@ export async function getAllLinkedInArticles(
         throw new Error('LINKEDIN_LI_AT cookie is expired or IP-restricted. Please refresh it.');
       }
 
-      // ── STEP 3: Fall back to credential login ─────────────────────────────
+      // ── STEP 3: Fall back to credential login or manual login ────────────
       console.log(`[LinkedIn] Step 3/6: Session invalid. Attempting credential login...`);
       const loginUrl = 'https://www.linkedin.com/login';
       await page.goto(loginUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await new Promise((r) => setTimeout(r, 3000)); // Wait for JS to render the form
 
-      const usernameEl = await page.$('#username');
-      const passwordEl = await page.$('#password');
+      // Wait up to 12s for React to render the form (domcontentloaded fires before React hydration)
+      let usernameEl = null;
+      let passwordEl = null;
+      try {
+        await page.waitForSelector('#username', { timeout: 12000 });
+        usernameEl = await page.$('#username');
+        passwordEl = await page.$('#password');
+      } catch {
+        // form not rendered — fall through to manual login
+      }
 
       console.log(`[LinkedIn] url=${page.url()} title=${await page.title()} loginForm=${Boolean(usernameEl && passwordEl)}`);
 
@@ -131,28 +138,60 @@ export async function getAllLinkedInArticles(
         console.log(`[LinkedIn] Post-login URL: ${postLoginUrl}`);
 
         if (postLoginUrl.includes('/checkpoint/') || postLoginUrl.includes('/authwall')) {
-          console.error(`[LinkedIn] ❌ LinkedIn security checkpoint from this server IP — credential login blocked.`);
-          console.error(`[LinkedIn] Action required: provide a fresh li_at cookie from your local browser in LINKEDIN_LI_AT.`);
-          throw new Error('LinkedIn credential login blocked by security checkpoint on this server IP');
+          console.error(`[LinkedIn] ❌ LinkedIn security checkpoint — credential login blocked.`);
+          console.error(`[LinkedIn] A browser window is open. Please complete login manually and wait...`);
+          // Fall through to manual login wait below
+        } else {
+          const loggedInAfterCreds = postLoginUrl.includes('/feed') || postLoginUrl.includes('/dashboard') || postLoginUrl.includes('/home');
+          if (!loggedInAfterCreds) {
+            throw new Error(`Credential login failed — landed on: ${postLoginUrl}`);
+          }
+          console.log(`[LinkedIn] ✅ Credential login successful.`);
         }
+      }
 
-        const loggedInAfterCreds = postLoginUrl.includes('/feed') || postLoginUrl.includes('/dashboard') || postLoginUrl.includes('/home');
-        if (!loggedInAfterCreds) {
-          throw new Error(`Credential login failed — landed on: ${postLoginUrl}`);
+      // ── STEP 4: Wait for manual login if auto-login didn't succeed ────────
+      const currentUrlCheck = page.url();
+      const isLoggedInNow = currentUrlCheck.includes('/feed') || currentUrlCheck.includes('/dashboard') || currentUrlCheck.includes('/home');
+      if (!isLoggedInNow) {
+        console.log(`[LinkedIn] Step 4/6: Waiting for manual login in the open browser window (timeout: 3 min)...`);
+        console.log(`[LinkedIn] 👉 Please log in to LinkedIn in the Chromium window that opened.`);
+        try {
+          await page.waitForFunction(
+            () => window.location.href.includes('/feed') || window.location.href.includes('/dashboard') || window.location.href.includes('/home'),
+            { timeout: 180000, polling: 2000 },
+          );
+          console.log(`[LinkedIn] ✅ Manual login detected. Continuing...`);
+        } catch {
+          throw new Error('Manual login timed out after 3 minutes. Please try again.');
         }
-        console.log(`[LinkedIn] ✅ Credential login successful.`);
-      } else {
-        throw new Error(`LinkedIn login form not found. URL: ${page.url()}`);
       }
     } else {
       console.log(`[LinkedIn] ✅ Session is valid.`);
     }
 
-    // Navigate to posts page
+    // Navigate to posts page — go via company home first to avoid /unavailable/ redirect
+    const companyHomeUrl = `https://www.linkedin.com/company/${companyName}/`;
+    console.log(`[LinkedIn] Step 5/6: Navigating to company home: ${companyHomeUrl}`);
+    await page.goto(companyHomeUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 4000));
+
+    const afterHomeUrl = page.url();
+    if (afterHomeUrl.includes('/unavailable')) {
+      throw new Error(`LinkedIn company '${companyName}' returned /unavailable — company slug may be wrong or page is blocked.`);
+    }
+    console.log(`[LinkedIn] Company home loaded: ${afterHomeUrl}`);
+
     const targetUrl = `https://www.linkedin.com/company/${companyName}/posts/?feedView=all`;
-    console.log(`[LinkedIn] Step 5/6: Navigating to target page: ${targetUrl}`);
+    console.log(`[LinkedIn] Navigating to posts page: ${targetUrl}`);
     await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await new Promise((r) => setTimeout(r, 5000)); // Wait for feed to load
+    await new Promise((r) => setTimeout(r, 6000)); // Wait for feed to load
+
+    const afterPostsUrl = page.url();
+    if (afterPostsUrl.includes('/unavailable')) {
+      throw new Error(`LinkedIn posts page for '${companyName}' returned /unavailable — LinkedIn may be throttling.`);
+    }
+    console.log(`[LinkedIn] Posts page loaded: ${afterPostsUrl}`);
 
     // Scroll to load more posts
     // If latestArticleDate is null, we assume "Scrape All" and scroll more
@@ -160,9 +199,13 @@ export async function getAllLinkedInArticles(
     console.log(`[LinkedIn] Scrolling ${scrollCount} times...`);
 
     for (let i = 0; i < scrollCount; i++) {
-      await page.evaluate(async () => {
-        window.scrollBy(0, window.innerHeight * 2);
-      });
+      try {
+        await page.evaluate(() => {
+          window.scrollBy(0, window.innerHeight * 2);
+        });
+      } catch (scrollErr: any) {
+        console.log(`[LinkedIn] Scroll ${i + 1} skipped (frame detached): ${scrollErr?.message}`);
+      }
       console.log(`[LinkedIn] Scroll ${i + 1}/${scrollCount}...`);
       await new Promise((r) => setTimeout(r, 3000));
     }

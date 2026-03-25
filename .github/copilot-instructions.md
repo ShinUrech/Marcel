@@ -99,7 +99,7 @@ A Next.js proxy route bridges them:
 
 **YouTube (8):** SBBCFFFFS, blsag, raborig, zaborig, SuedostbahnSOB, StadlerRail, SiemensMobility, AlstomOfficial
 
-**LinkedIn (2, local-only):** `sbb-cff-ffs`, `bls-ag` — trigger manually from local machine only (see LinkedIn section below)
+**LinkedIn (2, local-only):** `sbb`, `bls-ag` — trigger manually from local machine only (see LinkedIn section below)
 
 ## LinkedIn Scraping — Local Machine Only
 
@@ -127,7 +127,7 @@ The scraper uses Puppeteer with a **persistent `userDataDir`** (`project-marcel-
 2. Ensure `LINKEDIN_EMAIL` and `LINKEDIN_PASSWORD` are set in your local `.env`
 3. Trigger the endpoints:
    ```
-   GET http://localhost:5000/api/scraper/linkedin/sbb-cff-ffs
+   GET http://localhost:5000/api/scraper/linkedin/sbb
    GET http://localhost:5000/api/scraper/linkedin/bls-ag
    ```
 4. If the session has expired, a Chromium window will open — log in manually, then the scraper continues automatically.
