@@ -21,6 +21,9 @@ function getLinkedInCredentials() {
   return { email, password };
 }
 
+// Mutex to prevent concurrent Puppeteer sessions sharing the same userDataDir
+let linkedInScrapeLock: Promise<void> = Promise.resolve();
+
 //**/ NOTE: "linkedIn POST" SCRAPPING SCRIPT
 export async function getAllLinkedInArticles(
   companyName: string,
@@ -32,6 +35,15 @@ export async function getAllLinkedInArticles(
     console.warn(`⚠️  LinkedIn company '${companyName}' is not in the approved list. Skipping scraping.`);
     return [];
   }
+
+  // Serialize concurrent requests — only one Puppeteer session at a time (shared userDataDir)
+  let releaseLock!: () => void;
+  const myTurn = new Promise<void>((resolve) => { releaseLock = resolve; });
+  const previousLock = linkedInScrapeLock;
+  linkedInScrapeLock = myTurn;
+  await previousLock;
+
+  console.log(`[LinkedIn] Lock acquired for '${companyName}'.`);
 
   const { email, password } = getLinkedInCredentials();
 
@@ -62,7 +74,15 @@ export async function getAllLinkedInArticles(
 
   // When li_at is set, don't use a shared userDataDir (avoids lock conflicts and stale sessions)
   const puppeteerOptions = liAtCookie ? {} : { userDataDir };
-  const { browser, page } = await getPuppeteerInstance([], puppeteerOptions);
+  let browser: any;
+  let page: any;
+  try {
+    ({ browser, page } = await getPuppeteerInstance([], puppeteerOptions));
+  } catch (launchErr: any) {
+    releaseLock();
+    console.log(`[LinkedIn] Lock released for '${companyName}' (launch failed).`);
+    throw launchErr;
+  }
 
   try {
     // ── STEP 1: Inject li_at cookie (if provided) on the LinkedIn domain ──────
@@ -334,5 +354,7 @@ export async function getAllLinkedInArticles(
     return [];
   } finally {
     await browser.close();
+    releaseLock();
+    console.log(`[LinkedIn] Lock released for '${companyName}'.`);
   }
 }
