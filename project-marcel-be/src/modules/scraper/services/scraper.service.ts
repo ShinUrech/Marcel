@@ -14,6 +14,7 @@ import { getAllProBahnArticles } from './scraping-scripts/pro-bahn.script';
 import { getAllPressEportalArticles, getAllPressePortalEmArticles } from './scraping-scripts/presseportal.script';
 import { getAllBahnBlogArticles } from './scraping-scripts/bahnblogstelle.script';
 import { getAllLinkedInArticles } from './scraping-scripts/linkedIn.script';
+import { getActiveLinkedInSources } from './scraping-config/target-sources.config';
 import { getAllHupacArticles } from './scraping-scripts/hupac.script';
 import { getAllDoppelArticles } from './scraping-scripts/doppelmayr.script';
 import { getAllAarglArticles } from './scraping-scripts/aargauverkehr.script';
@@ -234,6 +235,32 @@ export class ScraperService {
     }
 
     return articles;
+  }
+
+  //**/ NOTE: Scrape ALL active LinkedIn sources from target-sources.config.ts
+  async scrapeAllLinkedIn() {
+    const sources = getActiveLinkedInSources();
+    const results: { slug: string; count: number; error?: string }[] = [];
+
+    for (const source of sources) {
+      const slug = source.url.split('/company/')[1]?.replace(/\/$/, '');
+      if (!slug) continue;
+
+      console.log(`[LinkedIn Batch] Scraping: ${source.name} (${slug})...`);
+      try {
+        const articles = await getAllLinkedInArticles(slug);
+        for (const article of articles) {
+          await this.articlesService.createArticle(article);
+        }
+        console.log(`[LinkedIn Batch] ${source.name}: saved ${articles.length} articles.`);
+        results.push({ slug, count: articles.length });
+      } catch (err: any) {
+        console.error(`[LinkedIn Batch] ${source.name} failed: ${err.message}`);
+        results.push({ slug, count: 0, error: err.message });
+      }
+    }
+
+    return results;
   }
 
   //**/ NOTE: "hupac.com/" SCRAPPING SCRIPT

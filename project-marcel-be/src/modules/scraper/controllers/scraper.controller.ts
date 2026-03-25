@@ -34,6 +34,11 @@ export class ScraperController {
     return this.articlesService.formateDates();
   }
 
+  @Get('linkedin-all')
+  async scrapeAllLinkedIn() {
+    return this.scraperService.scrapeAllLinkedIn();
+  }
+
   @Get('linkedin/:company')
   async getCompanyPost(@Param('company') companyName: string) {
     return this.scraperService.getAllLinkedInArticles(companyName);
