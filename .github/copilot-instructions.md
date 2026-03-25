@@ -99,9 +99,47 @@ A Next.js proxy route bridges them:
 
 **YouTube (8):** SBBCFFFFS, blsag, raborig, zaborig, SuedostbahnSOB, StadlerRail, SiemensMobility, AlstomOfficial
 
-**LinkedIn (2, local-only):** `sbb-cff-ffs`, `bls-ag` — trigger manually: `GET /api/scraper/linkedin/sbb-cff-ffs`
+**LinkedIn (2, local-only):** `sbb-cff-ffs`, `bls-ag` — trigger manually from local machine only (see LinkedIn section below)
 
-## Daily Cron Pipeline (03:00 UTC, server)
+## LinkedIn Scraping — Local Machine Only
+
+LinkedIn scraping **must run on the developer's local machine**. It cannot run on the DigitalOcean server and must never be added to the automated cron.
+
+### Why it cannot run on the server
+
+LinkedIn binds session cookies (`li_at`) to the originating IP address. Copying a cookie from a browser and using it from a different machine/IP always results in:
+```
+❌ LINKEDIN_LI_AT cookie is invalid for this server IP.
+```
+This has been confirmed repeatedly — there is no workaround. The credential login path also fails on the server because LinkedIn triggers a security checkpoint when it detects a new IP or headless browser.
+
+### How it works locally
+
+The scraper uses Puppeteer with a **persistent `userDataDir`** (`project-marcel-be/puppeteer_data/linkedin/`). This stores the full browser session (cookies, local storage) on disk.
+
+- **First run / expired session**: Puppeteer opens a visible Chromium window. The developer logs in manually. The session is saved to `userDataDir` and reused on future runs.
+- **Session still valid**: Puppeteer uses the stored session silently — no login needed.
+- **`LINKEDIN_LI_AT` env var**: If set, the scraper tries to inject this cookie instead of using `userDataDir`. This only works when the cookie was obtained on the same machine/IP. Leave it empty locally and rely on `userDataDir` instead.
+
+### How to run LinkedIn scraping locally
+
+1. Make sure the backend is running locally (`docker compose up` or `npm run start:dev`)
+2. Ensure `LINKEDIN_EMAIL` and `LINKEDIN_PASSWORD` are set in your local `.env`
+3. Trigger the endpoints:
+   ```
+   GET http://localhost:5000/api/scraper/linkedin/sbb-cff-ffs
+   GET http://localhost:5000/api/scraper/linkedin/bls-ag
+   ```
+4. If the session has expired, a Chromium window will open — log in manually, then the scraper continues automatically.
+5. The session persists in `project-marcel-be/puppeteer_data/linkedin/` for future runs.
+
+### What NEVER to do
+
+- **Never** add LinkedIn endpoints to the server cron (`docker-compose.prod.yml`)
+- **Never** try to run LinkedIn scraping via SSH/remote trigger on the DigitalOcean server
+- **Never** copy a `li_at` cookie from your browser and try to use it on the server — it will always fail
+
+
 
 1. `scraper/scrape-all` — scrape all news + YouTube
 2. `scraper/download` — download source images
