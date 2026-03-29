@@ -201,18 +201,39 @@ export class ArticlesService {
       return { data: [], message: 'No search query provided' };
     }
 
-    const filter = {
+    // Try MongoDB $text search first (tokenized, weighted relevance scoring)
+    const textFilter = { $text: { $search: query } };
+    const textCount = await this.articleModel.countDocuments(textFilter);
+
+    if (textCount > 0) {
+      const articles = await this.articleModel
+        .find(textFilter, { score: { $meta: 'textScore' } })
+        .sort({ score: { $meta: 'textScore' }, date: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      return {
+        data: articles,
+        currentPage: page,
+        totalPages: Math.ceil(textCount / limit),
+        totalItems: textCount,
+      };
+    }
+
+    // Fallback: regex search for partial/substring matches
+    const regexFilter = {
       $or: [
         { title: { $regex: query, $options: 'i' } },
+        { teaser: { $regex: query, $options: 'i' } },
+        { generatedTeaser: { $regex: query, $options: 'i' } },
         { generatedContent: { $regex: query, $options: 'i' } },
         { originalContent: { $regex: query, $options: 'i' } },
       ],
     };
 
-    const articles = await this.articleModel.find(filter).sort({ date: -1 }).skip(skip).limit(limit).exec();
-
-    // Get total count
-    const total = await this.articleModel.countDocuments(filter);
+    const articles = await this.articleModel.find(regexFilter).sort({ date: -1 }).skip(skip).limit(limit).exec();
+    const total = await this.articleModel.countDocuments(regexFilter);
 
     return {
       data: articles,

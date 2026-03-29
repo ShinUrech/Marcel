@@ -70,3 +70,24 @@ export class Article {
 }
 
 export const ArticleSchema = SchemaFactory.createForClass(Article);
+
+// Full-text search index: weighted so title matches rank higher than content
+ArticleSchema.index(
+  {
+    title: 'text',
+    teaser: 'text',
+    generatedTeaser: 'text',
+    generatedContent: 'text',
+    originalContent: 'text',
+  },
+  {
+    weights: {
+      title: 10,
+      teaser: 5,
+      generatedTeaser: 5,
+      generatedContent: 2,
+      originalContent: 1,
+    },
+    name: 'article_text_search',
+  },
+);
