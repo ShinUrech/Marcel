@@ -13,14 +13,15 @@ const SearchPage = () => {
   const searchParams = useSearchParams();
   const [articles, setArticles] = useState<GetAllArticlesAPI | null>(null);
   const [query, setQuery] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [initialLoad, setInitialLoad] = useState<boolean>(true);
+  const [fetching, setFetching] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const currentPage = Number(searchParams?.get('page')) || 1;
 
   useEffect(() => {
     const searchQuery = searchParams?.get('query') || '';
     setQuery(searchQuery);
-    setLoading(true);
+    setFetching(true);
     setIsError(false);
 
     const fetchArticles = async () => {
@@ -41,14 +42,15 @@ const SearchPage = () => {
       } catch (error) {
         setIsError(true);
       } finally {
-        setLoading(false);
+        setFetching(false);
+        setInitialLoad(false);
       }
     };
 
     fetchArticles();
   }, [searchParams, currentPage]);
 
-  if (loading) {
+  if (initialLoad) {
     return <Loading />;
   }
 
@@ -68,7 +70,8 @@ const SearchPage = () => {
         <h1>{t('latestArticles')}</h1>
       )}
 
-      {query && !articles?.data.length ? (
+      <div className={`transition-opacity duration-300 ${fetching ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+        {query && !articles?.data.length ? (
         <p>
           {t('noResult')} &quot;<strong>{query}</strong>&quot;
         </p>
@@ -93,6 +96,7 @@ const SearchPage = () => {
           )}
         </>
       )}
+      </div>
     </main>
   );
 };
