@@ -22,8 +22,10 @@ const SearchBar = () => {
     debounceRef.current = setTimeout(() => {
       if (value.trim() !== '') {
         router.push(`/search?query=${encodeURIComponent(value)}`);
+      } else {
+        router.push('/search');
       }
-    }, 500);
+    }, 300);
   };
 
   // Cleanup timeout on unmount

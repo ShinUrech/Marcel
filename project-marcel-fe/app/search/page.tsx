@@ -21,53 +21,51 @@ const SearchPage = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const searchQuery = searchParams?.get('query') || '';
     setQuery(searchQuery);
-    if (searchQuery.trim() !== '') {
-      const fetchArticles = async () => {
-        try {
-          const res = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_SERVER_URL
-            }/articles/search?query=${encodeURIComponent(
-              query
-            )}&page=${currentPage}`,
 
-            { cache: 'no-cache' }
-          );
+    const fetchArticles = async () => {
+      try {
+        const url =
+          searchQuery.trim() !== ''
+            ? `${process.env.NEXT_PUBLIC_SERVER_URL}/articles/search?query=${encodeURIComponent(searchQuery)}&page=${currentPage}`
+            : `${process.env.NEXT_PUBLIC_SERVER_URL}/articles?page=${currentPage}`;
 
-          if (!res.ok) {
-            throw new Error('Failed to fetch search results');
-          }
-          const data: GetAllArticlesAPI = await res.json();
-          setArticles(data);
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
-          setIsError(true);
-        } finally {
-          setLoading(false);
+        const res = await fetch(url, { cache: 'no-cache' });
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch articles');
         }
-      };
+        const data: GetAllArticlesAPI = await res.json();
+        setArticles(data);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        setIsError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchArticles();
-    } else {
-      setLoading(false); // Stop loading if no query
-    }
-  }, [searchParams, currentPage, query]);
+    fetchArticles();
+  }, [searchParams, currentPage]);
 
   if (loading) {
     return <Loading />;
   }
 
-  if (isError || !articles) {
+  if (isError) {
     return <WarningMsg returnToHome={true} />;
   }
 
   return (
     <main className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[80px] md:pt-[100px] sm:pt-[80px] lg:pt-[120px] flex-grow">
       <SearchBar />
-      <div className="flex items-center gap-2">
-        <h1>Search Results for</h1>
-        <span className="font-semibold text-blue"> &quot;{query}&quot;</span>
-      </div>
+      {query ? (
+        <div className="flex items-center gap-2">
+          <h1>Search Results for</h1>
+          <span className="font-semibold text-blue"> &quot;{query}&quot;</span>
+        </div>
+      ) : (
+        <h1>{t('latestArticles')}</h1>
+      )}
 
       {query && !articles?.data.length ? (
         <p>
