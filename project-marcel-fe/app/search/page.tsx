@@ -18,9 +18,10 @@ const SearchPage = () => {
   const currentPage = Number(searchParams?.get('page')) || 1;
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
     const searchQuery = searchParams?.get('query') || '';
     setQuery(searchQuery);
+    setLoading(true);
+    setIsError(false);
 
     const fetchArticles = async () => {
       try {
