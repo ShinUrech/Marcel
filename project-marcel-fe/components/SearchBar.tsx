@@ -1,19 +1,45 @@
 'use client';
 import { t } from '@/lib/translate';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 const SearchBar = () => {
-  const [query, setQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams?.get('query') || '');
   const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
+    const value = e.target.value;
+    setQuery(value);
+
+    // Clear previous debounce timer
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Debounce: auto-search after 500ms of no typing
+    debounceRef.current = setTimeout(() => {
+      if (value.trim() !== '') {
+        router.push(`/search?query=${encodeURIComponent(value)}`);
+      }
+    }, 500);
   };
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   const handleSearch = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
     if (query.trim() !== '') {
-      // Redirect to the search results page with the query as a query parameter
       router.push(`/search?query=${encodeURIComponent(query)}`);
     }
   };
